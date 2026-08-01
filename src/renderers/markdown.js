@@ -42,7 +42,10 @@ export class MarkdownRenderer {
     data.projects.forEach((p) => {
       L.push(`**${p.name}** · *${p.meta}*`);
       p.bullets.forEach((b) => L.push(`- ${b}`));
-      L.push(`*Tech: ${p.tech}*`);
+      // Guarded like the experience tech line above and like both of the DOCX
+      // renderer's: `tech` is optional, and printing it unguarded rendered a
+      // literal "Tech: undefined" under every project that omitted it.
+      if (p.tech) L.push(`*Tech: ${p.tech}*`);
       L.push("");
     });
     L.push("---");
