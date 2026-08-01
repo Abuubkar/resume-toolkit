@@ -121,6 +121,12 @@ export function checkApplication(profile, application) {
   const requirements = application.requirements ?? [];
   const gaps = [];
 
+  // Requirements are established before any selection exists — that is the whole
+  // point of reporting Gaps while the decision is still "should I apply?" rather
+  // than beside a finished resume. So the "cited entry must be on the resume"
+  // rule only has meaning once something has actually been selected.
+  const phase = selection.length === 0 ? "analysis" : "tailored";
+
   requirements.forEach((req, i) => {
     const where = `requirement ${i + 1} ("${req.text ?? req.id ?? "?"}")`;
     const covers = req.covers ?? [];
@@ -133,7 +139,7 @@ export function checkApplication(profile, application) {
     for (const id of covers) {
       if (!profile.entries?.[id]) {
         errors.push(`${where}: cites "${id}", which is not in the profile`);
-      } else if (!selectedIds.has(id)) {
+      } else if (phase === "tailored" && !selectedIds.has(id)) {
         // A requirement covered by something not on the resume is not covered.
         errors.push(`${where}: cites "${id}", which this application does not include`);
       }
@@ -148,6 +154,7 @@ export function checkApplication(profile, application) {
     covered: requirements.length - gaps.length,
     requirements: requirements.length,
     mode,
+    phase,
   };
 }
 
