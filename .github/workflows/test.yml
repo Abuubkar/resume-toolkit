@@ -1,0 +1,34 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        # 20 is the floor declared in package.json engines; 24 is what the
+        # author runs. Testing both stops a newer-only API slipping in.
+        node: [20, 24]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - run: npm ci
+
+      # LibreOffice is only needed by the PDF cases; without it they skip
+      # rather than fail, so install it and actually exercise them.
+      - name: Install LibreOffice
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends libreoffice-writer fonts-liberation
+
+      - run: npm test

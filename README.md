@@ -156,3 +156,12 @@ rather than quietly invented.
 ## Licence
 
 MIT
+
+## Tests
+
+```bash
+npm test
+```
+
+Node's built-in runner, no test dependencies. The PDF cases skip automatically
+when LibreOffice is absent; CI installs it so they run there.
