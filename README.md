@@ -13,9 +13,8 @@ server.
 
 ## Status
 
-Early. Presets, Applications, provenance enforcement and Gap reporting all work
-and are in use. The MCP server that lets your agent drive them is next — until
-then, the Application record is filled in by hand or by an agent editing JSON.
+Working end to end: Presets, Applications, provenance enforcement, Gap reporting,
+a CLI, and an MCP server your agent drives directly.
 
 ## Install
 
@@ -71,6 +70,46 @@ Across 3 application(s):
 
 That last output is the point of keeping every application. One missing skill is
 easy to wave away; the same one blocking every role you want is a decision.
+
+## Use it from your agent (MCP)
+
+Point Claude Code, Cursor, or any MCP client at the server and tailoring becomes
+a conversation — *"here's the JD, what am I missing?"*
+
+```json
+{
+  "mcpServers": {
+    "resume": {
+      "command": "npx",
+      "args": ["-y", "@abuubkar/resume-toolkit", "resume-toolkit-mcp"],
+      "env": {
+        "RESUME_PROFILE": "/path/to/profile.yaml",
+        "RESUME_APPLICATIONS": "/path/to/applications"
+      }
+    }
+  }
+}
+```
+
+The tool surface deliberately makes the agent stop and think before it writes:
+
+| Tool | Purpose |
+|---|---|
+| `read_profile` | The raw material — Entries, Phrasings, Presets |
+| `create_application` | Start one from a JD; stores the posting verbatim |
+| `set_requirements` | **Analysis.** Submit requirements + which Entries evidence each → returns Gaps |
+| `set_selection` | **Tailoring.** Submit the ordered picks → rejected if it breaks the mode |
+| `check_application` / `render_application` | Report, then write into the application's own directory |
+| `aggregate_gaps` | What you keep lacking, across every application |
+| `list_applications` / `read_application` / `render_preset` | Read and standing-resume rendering |
+
+`set_requirements` comes **before** `set_selection` by design. Gaps surface while
+the decision is still *"should I apply, and how?"* — not beside a finished PDF
+you're already attached to. And `set_selection` refuses to persist anything that
+violates the Tailoring Mode, so a rejected bullet never reaches disk.
+
+The agent supplies the judgement; the server supplies the guarantees. No API key,
+no prompt, no inference cost — your agent already has the model.
 
 Or from code:
 
@@ -143,15 +182,22 @@ judgement call, inventing an employer is not, and there is no flag for it.
 ## Design decisions
 
 Building a Preset is **pure data transformation** — no model, no network, works
-in CI. Tailoring is the only capability that will need a language model, and it
-is strictly additive.
+offline and in CI. Editing your profile and rendering a standing resume must
+always work that way; tailoring is the only capability that needs a model, and
+it is strictly additive.
 
-When it arrives, that model will live in *your* agent (Claude Code, Cursor)
-rather than in this package: no API key to store, no prompt to maintain, no
-inference cost. This toolkit will supply the data and enforce the guarantees —
-chiefly that every generated bullet traces back to an Entry, and that any Job
-Description requirement with no supporting material is reported as a **Gap**
-rather than quietly invented.
+That model lives in *your* agent (Claude Code, Cursor) rather than in this
+package: no API key to store, no prompt to maintain, no inference cost. The
+toolkit supplies the data and enforces the guarantees — every bullet traces back
+to an Entry, no requirement can claim coverage from something the resume omits,
+an employer can never be fabricated, and a requirement with no supporting
+material is reported as a **Gap** rather than quietly invented.
+
+There is deliberately **no matching algorithm** here. Recognising that "Celery
+and Redis" evidences "asynchronous processing" is a judgement call, and the
+agent has already read both documents. This code does the bookkeeping instead —
+the part the agent is unreliable at. See
+[docs/adr/](docs/adr/) for why.
 
 ## Tests
 

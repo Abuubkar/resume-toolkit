@@ -185,6 +185,39 @@ describe("checkApplication — requirement accounting", () => {
     assert.equal(r.ok, false);
     assert.match(r.errors[0], /does not include/);
   });
+
+  describe("analysis phase", () => {
+    // Gaps are meant to be read while the decision is still "should I apply?",
+    // which is before any selection exists.
+    const analysing = () =>
+      application({
+        selection: [],
+        requirements: [
+          { id: "r1", text: "React", covers: ["role.acme.ui"] },
+          { id: "r2", text: "Kubernetes", covers: [] },
+        ],
+      });
+
+    it("is reported as such when nothing has been selected yet", () => {
+      assert.equal(checkApplication(profile(), analysing()).phase, "analysis");
+      assert.equal(checkApplication(profile(), application()).phase, "tailored");
+    });
+
+    it("does not require cited entries to be on a resume that does not exist yet", () => {
+      const r = checkApplication(profile(), analysing());
+      assert.equal(r.ok, true);
+      assert.deepEqual(r.gaps.map((g) => g.text), ["Kubernetes"]);
+    });
+
+    it("still rejects a cited entry that is not in the profile at all", () => {
+      const r = checkApplication(
+        profile(),
+        application({ selection: [], requirements: [{ id: "r1", text: "Rust", covers: ["nope"] }] }),
+      );
+      assert.equal(r.ok, false);
+      assert.match(r.errors[0], /not in the profile/);
+    });
+  });
 });
 
 describe("resolveApplication", () => {
