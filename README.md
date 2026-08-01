@@ -71,6 +71,39 @@ Across 3 application(s):
 That last output is the point of keeping every application. One missing skill is
 easy to wave away; the same one blocking every role you want is a decision.
 
+## Growing the Phrasing library
+
+Hand-curation cannot keep pace with the number of ways postings differ, so the
+library grows from approved rewrites instead:
+
+```bash
+resume-toolkit promote role.acme.apis "Owned the public HTTP surface end to end."
+resume-toolkit pick-rate
+```
+
+`promote` appends to that Entry's Phrasings **in place** — your comments,
+formatting, and ordering are preserved, because a Master Profile is a document
+you maintain by hand and round-tripping it through a YAML serialiser would
+quietly flatten all of it.
+
+It stays gated: nothing is promoted until you approve that exact wording.
+
+`pick-rate` is the evidence for whether any of this is paying off — how many
+bullets reused an existing Phrasing versus were written fresh:
+
+```
+Across 12 application(s):
+
+  reused an existing phrasing   47
+  written fresh                 19
+
+  Pick rate: 71%
+```
+
+Origins are stamped when a selection is saved, never recomputed. Otherwise
+promoting rewrites back into the profile would push the measured rate towards
+100% purely because the library absorbed its own output.
+
 ## Use it from your agent (MCP)
 
 Point Claude Code, Cursor, or any MCP client at the server and tailoring becomes
@@ -101,6 +134,8 @@ The tool surface deliberately makes the agent stop and think before it writes:
 | `set_selection` | **Tailoring.** Submit the ordered picks → rejected if it breaks the mode |
 | `check_application` / `render_application` | Report, then write into the application's own directory |
 | `aggregate_gaps` | What you keep lacking, across every application |
+| `promote_phrasing` | Save an approved rewrite into the profile, preserving its formatting |
+| `pick_rate` | Evidence for whether keeping several Phrasings is paying off |
 | `list_applications` / `read_application` / `render_preset` | Read and standing-resume rendering |
 
 `set_requirements` comes **before** `set_selection` by design. Gaps surface while

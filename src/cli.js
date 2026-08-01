@@ -14,6 +14,8 @@ import {
   MODES,
 } from "./application.js";
 import { aggregateGaps } from "./gaps.js";
+import { promotePhrasing } from "./promote.js";
+import { pickRate } from "./provenance.js";
 
 const USAGE = `resume-toolkit — build resumes from a Master Profile
 
@@ -27,6 +29,8 @@ Applications — one per opening, kept:
   application check <id>        Report gaps, unsourced bullets and defects
   application render <id>       Render it into its own directory
   gaps                          What you keep not having, across applications
+  promote <entry> <text>        Save an approved rewrite as a Phrasing
+  pick-rate                     How often an existing Phrasing was reused
 
 Options:
   --profile <path>       Master Profile           (default: profile.yaml)
@@ -45,6 +49,7 @@ Examples:
   resume-toolkit application new 2026-08-01-acme-backend --jd jd.txt --company Acme
   resume-toolkit application check 2026-08-01-acme-backend
   resume-toolkit gaps
+  resume-toolkit promote role.acme.apis "Owned the public HTTP surface."
 `;
 
 const FLAGS = {
@@ -178,6 +183,7 @@ async function applicationCommand(sub, args, options) {
 async function main() {
   const { options, positional } = parseArgs(process.argv.slice(2));
   const [command, ...rest] = positional;
+  const args = rest;
 
   if (options.help || !command) {
     console.log(USAGE);
@@ -207,6 +213,38 @@ async function main() {
     case "application":
       await applicationCommand(rest[0], rest.slice(1), options);
       break;
+
+    case "promote": {
+      const [entry, ...rest] = args;
+      const text = rest.join(" ");
+      if (!entry || !text) throw new Error('promote needs an entry id and the wording, e.g. promote role.acme.apis "..."');
+      const result = promotePhrasing(options.profile, entry, text);
+      console.log(
+        result.promoted
+          ? `✓ ${entry} now has ${result.phrasings} phrasing(s); added at index ${result.index}`
+          : `· already phrasing ${result.index} of ${entry} — nothing to do`,
+      );
+      break;
+    }
+
+    case "pick-rate": {
+      const r = pickRate(options.applications);
+      if (r.applications === 0) {
+        console.log("No applications yet.");
+        break;
+      }
+      console.log(`Across ${r.applications} application(s):\n`);
+      console.log(`  reused an existing phrasing   ${r.picked}`);
+      console.log(`  written fresh                 ${r.rewritten}`);
+      if (r.unsourced) console.log(`  unsourced                     ${r.unsourced}`);
+      if (r.unstamped) console.log(`  unmeasured (no origin)        ${r.unstamped}`);
+      console.log(
+        r.pickRate === null
+          ? "\n  Nothing measurable yet."
+          : `\n  Pick rate: ${(r.pickRate * 100).toFixed(0)}% — below ~30% after ten applications means\n  the phrasing library is not covering how postings actually differ.`,
+      );
+      break;
+    }
 
     case "gaps": {
       const { total, gaps } = aggregateGaps(options.applications);

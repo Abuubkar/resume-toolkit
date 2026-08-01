@@ -23,3 +23,5 @@ export {
   MODES,
 } from "./application.js";
 export { aggregateGaps } from "./gaps.js";
+export { promotePhrasing } from "./promote.js";
+export { stampSelection, summarise, pickRate, PICKED, REWRITTEN, UNSOURCED } from "./provenance.js";

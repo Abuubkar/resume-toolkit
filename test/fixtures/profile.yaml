@@ -47,6 +47,19 @@ entries:
     phrasings:
       - Built React components.
 
+  # Folded phrasings on purpose: a folded scalar's continuation lines sit deeper
+  # than the item they belong to, which is where naive text splicing goes wrong.
+  role.acme.scale:
+    kind: bullet
+    parent: role.acme
+    phrasings:
+      - >-
+        Scaled the ingestion path to sustain triple the previous peak volume
+        without extending the nightly maintenance window.
+      - >-
+        Reworked ingestion so peak volume tripled with no change to the
+        maintenance window.
+
   project.widget:
     kind: project
     name: Widget

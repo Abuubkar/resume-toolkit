@@ -29,6 +29,8 @@ import {
   MODES,
 } from "./application.js";
 import { aggregateGaps } from "./gaps.js";
+import { promotePhrasing } from "./promote.js";
+import { stampSelection, summarise, pickRate } from "./provenance.js";
 
 // Configured by the MCP client, which sets env for the server process.
 const PROFILE_PATH = process.env.RESUME_PROFILE ?? "profile.yaml";
@@ -53,7 +55,7 @@ const guard = (handler) => async (args) => {
   }
 };
 
-const server = new McpServer({ name: "resume-toolkit", version: "0.3.0" });
+const server = new McpServer({ name: "resume-toolkit", version: "0.4.0" });
 
 const applicationId = z.string().describe("The application's id, e.g. 2026-08-01-acme-backend");
 
@@ -233,17 +235,59 @@ server.registerTool(
     },
   },
   guard(async ({ id, selection }) => {
+    const profile = loadProfile(PROFILE_PATH);
     const application = loadApplication(APPLICATIONS_DIR, id);
-    const report = checkApplication(loadProfile(PROFILE_PATH), { ...application, selection });
+    const report = checkApplication(profile, { ...application, selection });
 
     // Refuse to persist a selection that breaks the mode — the record should
     // never contain something the candidate did not agree to.
     if (!report.ok) return json({ saved: false, ...report });
 
-    application.selection = selection;
+    // Stamp how each bullet came about before freezing it. Recomputing this
+    // later would drift once approved rewrites are promoted into phrasings.
+    application.selection = stampSelection(profile, selection);
     saveApplication(APPLICATIONS_DIR, application);
-    return json({ saved: true, ...report, next: "render_application" });
+
+    const origins = summarise(application.selection);
+    return json({
+      saved: true,
+      ...report,
+      origins,
+      next: origins.rewritten
+        ? "render_application. Any rewrite the candidate approves is worth promote_phrasing — that is the only way the library grows."
+        : "render_application",
+    });
   }),
+);
+
+server.registerTool(
+  "promote_phrasing",
+  {
+    title: "Save an approved rewrite as a Phrasing",
+    description:
+      "Add wording to an Entry's Phrasings so future applications can reuse it. Only call this after the " +
+      "candidate has approved that exact text — it edits their canonical profile. This is the only way the " +
+      "Phrasing library grows, so offer it whenever a rewrite is accepted; hand-curation cannot keep up with " +
+      "the number of ways postings differ. Comments and formatting in the profile are preserved.",
+    inputSchema: {
+      entry: z.string().describe("Entry id the wording belongs to"),
+      text: z.string().describe("The approved wording, exactly as it should be stored"),
+    },
+  },
+  guard(async ({ entry, text }) => json(promotePhrasing(PROFILE_PATH, entry, text))),
+);
+
+server.registerTool(
+  "pick_rate",
+  {
+    title: "How often an existing Phrasing was reused",
+    description:
+      "Across every application: how many bullets reused an approved Phrasing verbatim versus were written " +
+      "fresh. This is the evidence for whether keeping multiple Phrasings per Entry is paying off. " +
+      "A low rate after ~10 applications means the library is not covering the ways postings actually differ.",
+    inputSchema: {},
+  },
+  guard(async () => json(pickRate(APPLICATIONS_DIR))),
 );
 
 server.registerTool(
