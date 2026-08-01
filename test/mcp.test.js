@@ -31,14 +31,21 @@ describe("MCP server", () => {
 
   // One connected server for the whole suite; the tools are stateful by design
   // (an application is built up across calls), so the tests run in order.
+  let profilePath;
+
   before(async () => {
     applicationsDir = tempDir("mcp-apps");
+    // promote_phrasing edits the profile, so the server gets a scratch copy
+    // rather than the shared fixture.
+    profilePath = path.join(tempDir("mcp-profile"), "profile.yaml");
+    fs.copyFileSync(FIXTURE_PROFILE, profilePath);
+
     transport = new StdioClientTransport({
       command: process.execPath,
       args: [SERVER],
       env: {
         PATH: process.env.PATH,
-        RESUME_PROFILE: FIXTURE_PROFILE,
+        RESUME_PROFILE: profilePath,
         RESUME_APPLICATIONS: applicationsDir,
       },
     });
@@ -67,6 +74,8 @@ describe("MCP server", () => {
         "check_application",
         "create_application",
         "list_applications",
+        "pick_rate",
+        "promote_phrasing",
         "read_application",
         "read_profile",
         "render_application",
@@ -179,6 +188,54 @@ describe("MCP server", () => {
     assert.equal(data.total, 2);
     assert.equal(data.gaps[0].label, "Kubernetes");
     assert.equal(data.gaps[0].count, 2);
+  });
+
+  it("set_selection stamps how each bullet came about", async () => {
+    const { data } = await call("read_application", { id: "2026-01-01-acme" });
+    assert.deepEqual(
+      data.selection.map((i) => i.origin),
+      Array(SELECTION.length).fill("picked"),
+    );
+    assert.equal(data.selection.find((i) => i.id === "role.acme.apis").phrasing, 0);
+  });
+
+  it("pick_rate reports the evidence for the Phrasing bet", async () => {
+    const { data } = await call("pick_rate");
+    assert.equal(data.picked, SELECTION.length);
+    assert.equal(data.rewritten, 0);
+    assert.equal(data.pickRate, 1);
+  });
+
+  it("a rewrite is flagged, and promote_phrasing grows the library", async () => {
+    const rewrite = "Owned the public HTTP surface end to end.";
+    const { data: saved } = await call("set_selection", {
+      id: "2026-01-01-acme",
+      selection: SELECTION.map((i) =>
+        i.id === "role.acme.apis" ? { ...i, text: rewrite } : i,
+      ),
+    });
+    assert.equal(saved.origins.rewritten, 1);
+    assert.match(saved.next, /promote_phrasing/);
+
+    const { data: promoted } = await call("promote_phrasing", {
+      entry: "role.acme.apis",
+      text: rewrite,
+    });
+    assert.equal(promoted.promoted, true);
+
+    // The profile grew...
+    const { data: p } = await call("read_profile");
+    assert.ok(p.entries["role.acme.apis"].phrasings.includes(rewrite));
+
+    // ...but the historical measurement did not drift.
+    const { data: rate } = await call("pick_rate");
+    assert.equal(rate.rewritten, 1);
+  });
+
+  it("promote_phrasing reports an unknown entry as a tool error", async () => {
+    const result = await callRaw("promote_phrasing", { entry: "role.ghost", text: "x" });
+    assert.equal(result.isError, true);
+    assert.match(result.content[0].text, /No entry "role.ghost"/);
   });
 
   it("surfaces a bad id as a tool error rather than dying", async () => {
