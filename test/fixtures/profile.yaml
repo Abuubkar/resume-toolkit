@@ -1,0 +1,96 @@
+# A deliberately tiny Master Profile for tests. Synthetic on purpose: the
+# toolkit must never carry anybody's real CV (ADR-0002).
+
+contact:
+  name: Test Person
+  email: test@example.com
+  phone: "+1-555-0100"
+  links:
+    - label: example.com
+      url: https://example.com
+
+education:
+  degree: B.S. Computer Science
+  rest: " Example University"
+  meta: "  ·  GPA: 3.5"
+
+entries:
+  headline:
+    kind: headline
+    phrasings:
+      - Backend Engineer
+      - Frontend Engineer
+
+  summary:
+    kind: summary
+    phrasings:
+      - Builds backend systems.
+      - Builds user interfaces.
+
+  role.acme:
+    kind: role
+    date: 2020 – 2024
+    phrasings:
+      - Senior Engineer | Acme
+      - Engineer | Acme
+
+  role.acme.apis:
+    kind: bullet
+    parent: role.acme
+    phrasings:
+      - Designed REST APIs.
+      - Built HTTP services.
+
+  role.acme.ui:
+    kind: bullet
+    parent: role.acme
+    phrasings:
+      - Built React components.
+
+  project.widget:
+    kind: project
+    name: Widget
+    phrasings:
+      - Python
+      - TypeScript
+
+  project.widget.perf:
+    kind: bullet
+    parent: project.widget
+    phrasings:
+      - Made it faster.
+
+  skill.languages:
+    kind: skill
+    label: Languages
+    phrasings:
+      - Python, SQL
+      - TypeScript, CSS
+
+  cert.example:
+    kind: certificate
+    issuer: Example Org
+    date: "2023"
+    phrasings:
+      - Example Certification
+
+presets:
+  backend:
+    - headline
+    - summary
+    - role.acme
+    - role.acme.apis
+    - project.widget
+    - project.widget.perf
+    - skill.languages
+    - cert.example
+
+  frontend:
+    - headline@1
+    - summary@1
+    - role.acme@1
+    - role.acme.ui
+    - project.widget@1
+    - project.widget.perf
+    - skill.languages@1
+    - cert.example
