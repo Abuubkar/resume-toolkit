@@ -1,6 +1,6 @@
 {
   "name": "@abuubkar/resume-toolkit",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Turn one canonical career profile into a job-specific, provenance-checked resume. Local-first, agent-driven.",
   "type": "module",
   "license": "MIT",
@@ -29,5 +29,8 @@
   },
   "scripts": {
     "test": "node --test test/*.test.js"
+  },
+  "devDependencies": {
+    "jszip": "^3.10.1"
   }
 }

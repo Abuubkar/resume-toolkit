@@ -37,11 +37,13 @@ describe("resolvePreset", () => {
     assert.equal(r.CONTACT.name, "Test Person");
     assert.equal(r.EDUCATION.degree, "B.S. Computer Science");
 
-    assert.deepEqual(r.experience, {
-      title: "Senior Engineer | Acme",
-      date: "2020 – 2024",
-      bullets: ["Designed REST APIs."],
-    });
+    assert.deepEqual(r.experiences, [
+      {
+        title: "Senior Engineer | Acme",
+        date: "2020 – 2024",
+        bullets: ["Designed REST APIs."],
+      },
+    ]);
 
     assert.deepEqual(r.projects, [
       { name: "Widget", meta: "Python", bullets: ["Made it faster."] },
@@ -57,7 +59,7 @@ describe("resolvePreset", () => {
     const r = resolvePreset(profile(), "frontend");
 
     assert.equal(r.title, "Frontend Engineer");
-    assert.equal(r.experience.title, "Engineer | Acme");
+    assert.equal(r.experiences[0].title, "Engineer | Acme");
     assert.deepEqual(r.skills, [["Languages", "TypeScript, CSS"]]);
     // A project's structural name is shared; only its meta line is a phrasing.
     assert.equal(r.projects[0].name, "Widget");
@@ -86,11 +88,39 @@ describe("resolvePreset", () => {
     throwsWith(assert, () => resolvePreset(p, "broken"), "must be selected before its bullets");
   });
 
-  it("rejects a second role, which the renderers cannot lay out", () => {
+  // Until 0.5.0 a second role threw: the renderers laid out exactly one. A
+  // contractor can hold two jobs at once, so they now render in list order.
+  it("accepts a second role and keeps both, in list order", () => {
     const p = profile();
     p.entries["role.other"] = { kind: "role", date: "2019", phrasings: ["Engineer | Other"] };
-    p.presets.broken = ["role.acme", "role.other"];
-    throwsWith(assert, () => resolvePreset(p, "broken"), "second role");
+    p.entries["role.other.thing"] = {
+      kind: "bullet",
+      parent: "role.other",
+      phrasings: ["Did the thing."],
+    };
+    p.presets.two = ["role.acme", "role.acme.apis", "role.other", "role.other.thing"];
+
+    const r = resolvePreset(p, "two");
+    assert.deepEqual(
+      r.experiences.map((e) => e.title),
+      ["Senior Engineer | Acme", "Engineer | Other"],
+    );
+    assert.deepEqual(r.experiences[1].bullets, ["Did the thing."]);
+  });
+
+  it("attaches each role's bullets to that role, not to the last one opened", () => {
+    const p = profile();
+    p.entries["role.other"] = { kind: "role", date: "2019", phrasings: ["Engineer | Other"] };
+    p.entries["role.other.thing"] = {
+      kind: "bullet",
+      parent: "role.other",
+      phrasings: ["Did the thing."],
+    };
+    p.presets.two = ["role.acme", "role.other", "role.other.thing", "role.acme.apis"];
+
+    const r = resolvePreset(p, "two");
+    assert.deepEqual(r.experiences[0].bullets, ["Designed REST APIs."]);
+    assert.deepEqual(r.experiences[1].bullets, ["Did the thing."]);
   });
 
   it("rejects an unrecognised kind", () => {

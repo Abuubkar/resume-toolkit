@@ -232,6 +232,6 @@ describe("resolveApplication", () => {
 
     const r = resolveApplication(p, app);
     assert.equal(r.slug, "2026-01-01-acme");
-    assert.deepEqual(r.experience.bullets, ["Frozen wording."]);
+    assert.deepEqual(r.experiences[0].bullets, ["Frozen wording."]);
   });
 });
