@@ -55,7 +55,7 @@ const guard = (handler) => async (args) => {
   }
 };
 
-const server = new McpServer({ name: "resume-toolkit", version: "0.4.1" });
+const server = new McpServer({ name: "resume-toolkit", version: "0.5.0" });
 
 const applicationId = z.string().describe("The application's id, e.g. 2026-08-01-acme-backend");
 

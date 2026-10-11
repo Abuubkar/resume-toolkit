@@ -17,18 +17,19 @@ export function validateResume(data) {
     errors.push("Missing or empty skills array");
   }
 
-  if (!data.experience) {
-    errors.push("Missing experience");
+  if (!data.experiences || !Array.isArray(data.experiences) || data.experiences.length === 0) {
+    errors.push("Missing or empty experiences array");
   } else {
-    if (!data.experience.title) errors.push("Missing experience.title");
-    if (!data.experience.date) errors.push("Missing experience.date");
-    if (
-      !data.experience.bullets ||
-      !Array.isArray(data.experience.bullets) ||
-      data.experience.bullets.length === 0
-    ) {
-      errors.push("Missing or empty experience.bullets");
-    }
+    // Every role still needs bullets. A role rendered as a bare title and date
+    // reads as an unfinished document, which is worse than leaving it out.
+    data.experiences.forEach((e, i) => {
+      const at = `experiences[${i}]`;
+      if (!e.title) errors.push(`Missing ${at}.title`);
+      if (!e.date) errors.push(`Missing ${at}.date`);
+      if (!e.bullets || !Array.isArray(e.bullets) || e.bullets.length === 0) {
+        errors.push(`Missing or empty ${at}.bullets`);
+      }
+    });
   }
 
   if (

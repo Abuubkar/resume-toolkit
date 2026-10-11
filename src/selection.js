@@ -23,7 +23,7 @@ export function resolveSelection(profile, items, label = "selection") {
     title: null,
     summary: null,
     skills: [],
-    experience: null,
+    experiences: [],
     projects: [],
     certificates: [],
   };
@@ -70,15 +70,16 @@ export function resolveSelection(profile, items, label = "selection") {
         resolved.summary = text;
         break;
 
-      case "role":
-        // The renderers lay out a single role, so selecting two is a mistake
-        // rather than something to silently drop.
-        if (resolved.experience) {
-          throw new Error(`${where}: a second role was selected; the renderers support one`);
-        }
-        resolved.experience = { title: text, date: entry.date, bullets: [] };
-        openParents.set(item.id, resolved.experience);
+      case "role": {
+        // Roles render in selection order, so a profile listing a current job
+        // before an earlier one gets that order on the page. The renderers
+        // laid out exactly one role until 0.5.0 and threw on a second; they
+        // now loop, because a contractor can hold two at once.
+        const role = { title: text, date: entry.date, bullets: [] };
+        resolved.experiences.push(role);
+        openParents.set(item.id, role);
         break;
+      }
 
       case "project": {
         const project = { name: entry.name, meta: text, bullets: [] };

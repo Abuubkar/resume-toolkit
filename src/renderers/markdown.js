@@ -25,16 +25,20 @@ export class MarkdownRenderer {
     L.push("");
     L.push("## Experience");
     L.push("");
-    L.push(`### ${data.experience.title}`);
-    L.push(`*${data.experience.date}*`);
-    if (data.experience.tagline) L.push(`*${data.experience.tagline}*`);
-    L.push("");
-    data.experience.bullets.forEach((b) => L.push(`- ${b}`));
-    if (data.experience.tech) {
+    data.experiences.forEach((role) => {
+      L.push(`### ${role.title}`);
+      L.push(`*${role.date}*`);
+      if (role.tagline) L.push(`*${role.tagline}*`);
       L.push("");
-      L.push(`**Tech:** ${data.experience.tech}`);
-    }
-    L.push("");
+      role.bullets.forEach((b) => L.push(`- ${b}`));
+      // Both optional lines stay guarded. Printing `tech` unconditionally is
+      // the exact bug that put "Tech: undefined" on a published resume.
+      if (role.tech) {
+        L.push("");
+        L.push(`**Tech:** ${role.tech}`);
+      }
+      L.push("");
+    });
     L.push("---");
     L.push("");
     L.push("## Selected Projects");

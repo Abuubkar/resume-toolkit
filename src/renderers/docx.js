@@ -139,65 +139,67 @@ export class DocxRenderer {
     );
 
     c.push(sectionHeading("Experience"));
-    c.push(
-      new Paragraph({
-        spacing: { before: 20, after: 20 },
-        tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
-        children: [
-          new TextRun({
-            text: r.experience.title,
-            bold: true,
-            size: 20,
-            font: "Arial",
-          }),
-          new TextRun({
-            text: "\t" + r.experience.date,
-            size: 19,
-            font: "Arial",
-            color: "444444",
-          }),
-        ],
-      }),
-    );
-    if (r.experience.tagline) {
+    r.experiences.forEach((role) => {
       c.push(
         new Paragraph({
-          spacing: { after: 30 },
+          spacing: { before: 20, after: 20 },
+          tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
           children: [
             new TextRun({
-              text: r.experience.tagline,
-              italics: true,
-              size: 18,
-              font: "Arial",
-              color: "555555",
-            }),
-          ],
-        }),
-      );
-    }
-    r.experience.bullets.forEach((b) => c.push(bullet(b)));
-    if (r.experience.tech) {
-      c.push(
-        new Paragraph({
-          spacing: { before: 10, after: 20 },
-          children: [
-            new TextRun({
-              text: "Tech: ",
+              text: role.title,
               bold: true,
-              size: 18,
+              size: 20,
               font: "Arial",
             }),
             new TextRun({
-              text: r.experience.tech,
-              italics: true,
-              size: 18,
+              text: "\t" + role.date,
+              size: 19,
               font: "Arial",
-              color: "555555",
+              color: "444444",
             }),
           ],
         }),
       );
-    }
+      if (role.tagline) {
+        c.push(
+          new Paragraph({
+            spacing: { after: 30 },
+            children: [
+              new TextRun({
+                text: role.tagline,
+                italics: true,
+                size: 18,
+                font: "Arial",
+                color: "555555",
+              }),
+            ],
+          }),
+        );
+      }
+      role.bullets.forEach((b) => c.push(bullet(b)));
+      if (role.tech) {
+        c.push(
+          new Paragraph({
+            spacing: { before: 10, after: 20 },
+            children: [
+              new TextRun({
+                text: "Tech: ",
+                bold: true,
+                size: 18,
+                font: "Arial",
+              }),
+              new TextRun({
+                text: role.tech,
+                italics: true,
+                size: 18,
+                font: "Arial",
+                color: "555555",
+              }),
+            ],
+          }),
+        );
+      }
+    });
 
     c.push(sectionHeading("Selected Projects"));
     r.projects.forEach((p) => {

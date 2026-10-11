@@ -16,7 +16,7 @@ describe("resolveSelection", () => {
       ...sourced.slice(0, 3),
       { id: "role.acme.apis", text: "Wrote the HTTP layer end to end." },
     ]);
-    assert.deepEqual(r.experience.bullets, ["Wrote the HTTP layer end to end."]);
+    assert.deepEqual(r.experiences[0].bullets, ["Wrote the HTTP layer end to end."]);
   });
 
   it("keeps list order as render order", () => {
@@ -25,7 +25,7 @@ describe("resolveSelection", () => {
       ...sourced,
       { id: "role.acme.ui", text: "Built React components." },
     ]);
-    assert.deepEqual(r.experience.bullets, ["Designed REST APIs.", "Built React components."]);
+    assert.deepEqual(r.experiences[0].bullets, ["Designed REST APIs.", "Built React components."]);
   });
 
   it("attaches bullets to whichever parent was opened before them", () => {
@@ -34,7 +34,7 @@ describe("resolveSelection", () => {
       { id: "project.widget", text: "Python" },
       { id: "project.widget.perf", text: "Made it faster." },
     ]);
-    assert.deepEqual(r.experience.bullets, ["Designed REST APIs."]);
+    assert.deepEqual(r.experiences[0].bullets, ["Designed REST APIs."]);
     assert.deepEqual(r.projects[0].bullets, ["Made it faster."]);
   });
 
@@ -44,7 +44,7 @@ describe("resolveSelection", () => {
         ...sourced,
         { id: null, kind: "bullet", parent: "role.acme", text: "Ran the cluster." },
       ]);
-      assert.deepEqual(r.experience.bullets, ["Designed REST APIs.", "Ran the cluster."]);
+      assert.deepEqual(r.experiences[0].bullets, ["Designed REST APIs.", "Ran the cluster."]);
     });
 
     it("are allowed for a headline", () => {
