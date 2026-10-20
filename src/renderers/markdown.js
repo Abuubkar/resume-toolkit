@@ -60,7 +60,7 @@ export class MarkdownRenderer {
     if (data.certificates && data.certificates.length) {
       L.push("## Certifications");
       data.certificates.forEach((c) =>
-        L.push(`- ${c.name} — ${c.issuer} (${c.date})`),
+        L.push(`- ${c.name} - ${c.issuer} (${c.date})`),
       );
       L.push("");
     }

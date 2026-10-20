@@ -280,7 +280,7 @@ export class DocxRenderer {
     if (r.certificates && r.certificates.length) {
       c.push(sectionHeading("Certifications"));
       r.certificates.forEach((cert) => {
-        c.push(bullet(`${cert.name} — ${cert.issuer} (${cert.date})`));
+        c.push(bullet(`${cert.name} - ${cert.issuer} (${cert.date})`));
       });
     }
     return c;

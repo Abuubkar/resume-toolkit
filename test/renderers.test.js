@@ -49,7 +49,7 @@ describe("MarkdownRenderer", () => {
     assert.match(md, /Designed REST APIs\./);
     assert.match(md, /\*\*Languages:\*\* Python, SQL/);
     assert.match(md, /B\.S\. Computer Science/);
-    assert.match(md, /Example Certification — Example Org \(2023\)/);
+    assert.match(md, /Example Certification - Example Org \(2023\)/);
   });
 
   // 0.5.0 made experience a list. A contractor holding two jobs at once is the
