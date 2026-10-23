@@ -26,6 +26,7 @@ function sectionHeading(text) {
   return new Paragraph({
     heading: HeadingLevel.HEADING_1,
     border: RULE,
+    keepNext: true,
     spacing: { before: 120, after: 60 },
     children: [
       new TextRun({
@@ -90,22 +91,19 @@ export class DocxRenderer {
         ],
       }),
     );
-    c.push(
-      new Paragraph({
-        spacing: { after: 20 },
-        children: [
-          new TextRun({
-            text: `${CONTACT.email}  •  ${CONTACT.phone}`,
-            size: 18,
-            font: "Arial",
-            color: "444444",
-          }),
-        ],
-      }),
-    );
-    const linkRuns = [];
+    const emailRun = new TextRun({
+      text: CONTACT.phone ? `${CONTACT.email}  •  ${CONTACT.phone}` : CONTACT.email,
+      size: 18,
+      font: "Arial",
+      color: "444444",
+    });
+    // Without a phone the links take its place on the email line.
+    if (CONTACT.phone) {
+      c.push(new Paragraph({ spacing: { after: 20 }, children: [emailRun] }));
+    }
+    const linkRuns = CONTACT.phone ? [] : [emailRun];
     CONTACT.links.forEach((l, i) => {
-      if (i)
+      if (i || !CONTACT.phone)
         linkRuns.push(
           new TextRun({
             text: "  •  ",
@@ -143,6 +141,7 @@ export class DocxRenderer {
       c.push(
         new Paragraph({
           spacing: { before: 20, after: 20 },
+          keepNext: true,
           tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
           children: [
             new TextRun({
@@ -206,6 +205,8 @@ export class DocxRenderer {
       c.push(
         new Paragraph({
           spacing: { before: 40, after: 15 },
+          // A heading stranded at a page foot reads as a missing section.
+          keepNext: true,
           children: [
             new TextRun({ text: p.name, bold: true, size: 19, font: "Arial" }),
             new TextRun({

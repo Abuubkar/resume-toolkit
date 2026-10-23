@@ -42,6 +42,15 @@ describe("MarkdownRenderer", () => {
     assert.match(render(data), /\*\*Tech:\*\* Django, Postgres/);
   });
 
+  it("puts the links on the email line when there is no phone", () => {
+    const data = base();
+    delete data.CONTACT.phone;
+    const md = render(data);
+    assert.doesNotMatch(md, /undefined/);
+    const line = md.split("\n").find((l) => l.startsWith(data.CONTACT.email));
+    for (const l of data.CONTACT.links) assert.ok(line.includes(`[${l.label}](${l.url})`), l.label);
+  });
+
   it("renders the parts a resume cannot do without", () => {
     const md = render(base());
     assert.match(md, /^# Test Person/m);
@@ -92,6 +101,14 @@ describe("MarkdownRenderer", () => {
 });
 
 describe("DocxRenderer", () => {
+  it("renders no phone separator when there is no phone", async () => {
+    const data = base();
+    delete data.CONTACT.phone;
+    const xml = await documentXml(await new DocxRenderer().render(data));
+    assert.doesNotMatch(xml, /undefined/);
+    assert.ok(xml.includes(data.CONTACT.email));
+  });
+
   // The DOCX is the file that actually gets sent, so the same guarantee has to
   // hold there — it was already correct, and now it stays that way.
   it("never writes the string undefined into the document", async () => {

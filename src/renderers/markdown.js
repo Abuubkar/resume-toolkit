@@ -8,8 +8,13 @@ export class MarkdownRenderer {
     L.push(`# ${CONTACT.name}`);
     L.push(`## ${data.title}`);
     L.push("");
-    L.push(`${CONTACT.email}  ·  ${CONTACT.phone}`);
-    L.push(CONTACT.links.map((l) => l.label).join("  ·  "));
+    // Without a phone the links take its place on the email line.
+    if (CONTACT.phone) {
+      L.push(`${CONTACT.email}  ·  ${CONTACT.phone}`);
+      L.push(CONTACT.links.map((l) => l.label).join("  ·  "));
+    } else {
+      L.push([CONTACT.email, ...CONTACT.links.map((l) => `[${l.label}](${l.url})`)].join("  ·  "));
+    }
     L.push("");
     L.push("---");
     L.push("");
